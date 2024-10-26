@@ -1,0 +1,110 @@
+﻿@using SecureAuthenticationSystem.ViewModels;
+@model RegisterViewModel;
+
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-4">Register</h2>
+        <form asp-action="Register" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label"></label>
+                <input asp-for="FullName" class="form-control" id="fullName" placeholder="Enter your full name" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" id="email" placeholder="Enter your email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MobileNumber" class="form-label"></label>
+                <input asp-for="MobileNumber" class="form-control" id="contactNumber" placeholder="Enter your number" />
+                <span asp-validation-for="MobileNumber" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" id="password" placeholder="Enter your password" oninput="checkPasswordStrength(this.value)" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+                <div id="passwordStrength" class="mt-2"></div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <input asp-for="ConfirmPassword" class="form-control" id="confirmPassword" placeholder="Re-enter your password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <input type="submit" value="Register" class="btn btn-success w-100 p-2" />
+            <p class="text-center mt-2">
+                Already have an account? <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Login</a>
+            </p>
+            <div class="text-center">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3"></a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        function checkPasswordStrength(password) {
+            let strengthBar = document.getElementById("passwordStrength");
+            let strength = 0;
+            if (password.length >= 8) strength += 1;
+            if (password.match(/[A-Z]/)) strength += 1;
+            if (password.match(/[a-z]/)) strength += 1;
+            if (password.match(/[0-9]/)) strength += 1;
+            if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+
+            let strengthText="";
+            switch (strength) {
+                case 1:
+                case 2:
+                    strengthText = '<span class="text-danger">Weak Password</span>';
+                    break;
+                case 3:
+                    strengthText = '<span class="text-warning">Strong Password</span>';
+                    break;
+                case 4:
+                case 5:
+                    strengthText = '<span class="text-success">Very Strong Password</span>';
+                    break;
+            }
+            strengthBar.innerHTML = ` ${strengthText}`;
+        }
+        function RegisterButton() {
+            const reCaptchaResponse = grecaptcha.getResponse();
+            const password = $("#password").val();
+            const confirmPassword = $("#confirmPassword").val();
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+            if (reCaptchaResponse) {
+                $.ajax({
+                    type: "POST",
+                    url: "https://localhost:7296/account/register",
+                    data: {
+                        fullName: $("#fullName").val(),
+                        email: $("#email").val(),
+                        password: password,
+                        captchaResponse: reCaptchaResponse
+                    },
+                    success: function (data) {
+                        // window.location.href = "/Home";
+                        alert("Registration Successful.")
+                    },
+                    error: function (error) {
+                        alert("Registration failed. Please try again.");
+                    }
+                });
+            } else {
+                alert("Please complete the CAPTCHA.");
+            }
+        }
+    </script>
+}
